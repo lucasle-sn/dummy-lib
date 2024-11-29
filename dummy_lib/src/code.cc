@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-void function() {
+void dummy_function() {
     printf ("From public header: %d\n", kConstant);
     printf ("From private header: %d\n", kConstantInternal);
 }
