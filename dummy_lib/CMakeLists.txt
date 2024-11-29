@@ -1,5 +1,6 @@
 add_library(dummy-lib
-    src/code.cc
+    src/public_code.cc
+    src/private_code.cc
 )
 
 target_include_directories(dummy-lib

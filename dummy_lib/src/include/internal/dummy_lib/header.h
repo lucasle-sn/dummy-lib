@@ -1,6 +1,6 @@
 #ifndef INTERNAL_DUMMY_LIB_HEADER_H
 #define INTERNAL_DUMMY_LIB_HEADER_H
 
-const int kConstantInternal = 200;
+void dummy_function_private();
 
 #endif //INTERNAL_DUMMY_LIB_HEADER_H
