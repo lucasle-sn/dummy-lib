@@ -1,0 +1,61 @@
+# Template workflow for downstream repositories
+# Copy this file to your downstream repo at: .github/workflows/auto-update-dummy-lib.yaml
+
+name: Auto-update dummy-lib submodule
+
+on:
+  schedule:
+    # Check for updates hourly
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-submodule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Update dummy-lib submodule
+        id: update
+        run: |
+          # Update the submodule to latest master
+          git submodule update --remote --merge path/to/dummy-lib
+          
+          # Check if there are changes
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No updates available"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            SUBMODULE_COMMIT=$(cd path/to/dummy-lib && git rev-parse HEAD)
+            echo "new_commit=$SUBMODULE_COMMIT" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.update.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: update dummy-lib submodule"
+          branch: auto-update-dummy-lib
+          delete-branch: true
+          title: "chore: update dummy-lib submodule"
+          body: |
+            ## Automated Submodule Update
+            
+            This PR updates the `dummy-lib` submodule to the latest master.
+            
+            **New Commit:** ${{ steps.update.outputs.new_commit }}
+            
+            Please review and merge if tests pass.
+          labels: |
+            dependencies
+            automated
