@@ -1,0 +1,18 @@
+name: Notify Downstream
+on:
+  push:
+    branches:
+      - main     # Trigger when code merges to main
+      - release  # Or trigger on release branches
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Repository Dispatch
+        run: |
+          curl -X POST \
+          -H "Authorization: token ${{ secrets.SUBMODULE_UPDATE_PAT_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/lucasle-sn/dummy-superproject/dispatches \
+          -d '{"event_type": "submodule_update"}'
