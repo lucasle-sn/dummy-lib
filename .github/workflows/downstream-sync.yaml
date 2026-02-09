@@ -1,0 +1,22 @@
+name: Auto Downstream PR
+
+on:
+  push:
+    branches:
+      - master
+      - 'release/**' # Triggers on any branch starting with release/
+
+jobs:
+  create-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Pull Request
+        uses: repo-sync/pull-request@v2
+        with:
+          destination_branch: "develop" # Change this to your downstream branch
+          github_token: ${{ secrets.SUBMODULE_UPDATE_PAT_TOKEN }}
+          pr_title: "Auto-merge: ${{ github.ref_name }} into develop"
+          pr_body: "This is an automated PR to sync downstream branches."
