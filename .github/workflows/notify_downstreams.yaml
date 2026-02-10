@@ -6,6 +6,16 @@ on:
       - master
       - release
 
+# REQUIRED: Create a Personal Access Token (PAT) with the following:
+# 1. Scopes: 'repo' (full control of private repositories)
+# 2. Must be from a user/account with WRITE access to downstream repos
+# 3. Add the token as a secret named 'SUBMODULE_UPDATE_PAT_TOKEN'
+#
+# To create a PAT:
+# - Go to GitHub Settings > Developer settings > Personal access tokens > Tokens (classic)
+# - Generate new token with 'repo' scope
+# - Copy the token and add it to this repo's secrets
+
 jobs:
   dispatch:
     runs-on: ubuntu-latest
@@ -13,12 +23,26 @@ jobs:
       matrix:
         downstream:
           - lucasle-sn/dummy-superproject
-          # Add more downstream repositories here
+          # Add more downstream repositories here:
+          # - owner/repo-name
+      fail-fast: false  # Continue notifying other repos even if one fails
     steps:
       - name: Send Repository Dispatch to ${{ matrix.downstream }}
+        continue-on-error: true  # Don't fail the workflow if one downstream fails
         run: |
-          curl -X POST \
-          -H "Authorization: token ${{ secrets.SUBMODULE_UPDATE_PAT_TOKEN }}" \
-          -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/${{ matrix.downstream }}/dispatches \
-          -d '{"event_type": "submodule-update","client_payload":{"submodule":"${{ github.repository }}","branch":"${{ github.ref_name }}","commit":"${{ github.sha }}"}}'
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: token ${{ secrets.SUBMODULE_UPDATE_PAT_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ matrix.downstream }}/dispatches \
+            -d '{"event_type": "submodule-update","client_payload":{"submodule":"${{ github.repository }}","branch":"${{ github.ref_name }}","commit":"${{ github.sha }}"}}')
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          if [ "$HTTP_CODE" -eq 204 ]; then
+            echo "✅ Successfully notified ${{ matrix.downstream }}"
+          else
+            echo "❌ Failed to notify ${{ matrix.downstream }} (HTTP $HTTP_CODE)"
+            echo "$BODY"
+            exit 1
+          fi
