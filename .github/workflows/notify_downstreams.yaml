@@ -35,7 +35,7 @@ jobs:
             -H "Authorization: token ${{ secrets.SUBMODULE_UPDATE_PAT_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/${{ matrix.downstream }}/dispatches \
-            -d '{"event_type": "submodule-auto-update","client_payload":{"submodule":"${{ github.repository }}","branch":"${{ github.ref_name }}","commit":"${{ github.sha }}"}}')
+            -d '{"event_type": "submodule-auto-update","client_payload":{"submodule":"${{ github.repository }}","branch":"${{ github.ref_name }}", "tag":"${{ github.ref_type == 'tag' && github.ref_name || '' }}","commit":"${{ github.sha }}"}}')
           
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | head -n-1)
