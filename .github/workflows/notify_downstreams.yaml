@@ -1,18 +1,24 @@
-name: Notify Downstream
+name: Notify Downstreams
 on:
   push:
     branches:
-      - main     # Trigger when code merges to main
-      - release  # Or trigger on release branches
+      - main
+      - master
+      - release
 
 jobs:
   dispatch:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        downstream:
+          - lucasle-sn/dummy-superproject
+          # Add more downstream repositories here
     steps:
-      - name: Send Repository Dispatch
+      - name: Send Repository Dispatch to ${{ matrix.downstream }}
         run: |
           curl -X POST \
           -H "Authorization: token ${{ secrets.SUBMODULE_UPDATE_PAT_TOKEN }}" \
           -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/lucasle-sn/dummy-superproject/dispatches \
-          -d '{"event_type": "submodule_update"}'
+          https://api.github.com/repos/${{ matrix.downstream }}/dispatches \
+          -d '{"event_type": "submodule-update","client_payload":{"submodule":"${{ github.repository }}","branch":"${{ github.ref_name }}","commit":"${{ github.sha }}"}}'
