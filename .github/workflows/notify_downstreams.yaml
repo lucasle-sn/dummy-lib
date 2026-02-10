@@ -12,7 +12,6 @@ name: Notify Downstreams
 on:
   push:
     branches:
-      - main
       - master
       - release
     tags:
