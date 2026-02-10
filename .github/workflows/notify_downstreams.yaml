@@ -1,11 +1,3 @@
-name: Notify Downstreams
-on:
-  push:
-    branches:
-      - main
-      - master
-      - release
-
 # REQUIRED: Create a Personal Access Token (PAT) with the following:
 # 1. Scopes: 'repo' (full control of private repositories)
 # 2. Must be from a user/account with WRITE access to downstream repos
@@ -16,6 +8,14 @@ on:
 # - Generate new token with 'repo' scope
 # - Copy the token and add it to this repo's secrets
 
+name: Notify Downstreams
+on:
+  push:
+    branches:
+      - main
+      - master
+      - release
+
 jobs:
   dispatch:
     runs-on: ubuntu-latest
@@ -23,8 +23,7 @@ jobs:
       matrix:
         downstream:
           - lucasle-sn/dummy-superproject
-          # Add more downstream repositories here:
-          # - owner/repo-name
+          # Add more downstream repositories here.
       fail-fast: false  # Continue notifying other repos even if one fails
     steps:
       - name: Send Repository Dispatch to ${{ matrix.downstream }}
@@ -34,7 +33,7 @@ jobs:
             -H "Authorization: token ${{ secrets.SUBMODULE_UPDATE_PAT_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/${{ matrix.downstream }}/dispatches \
-            -d '{"event_type": "submodule-update","client_payload":{"submodule":"${{ github.repository }}","branch":"${{ github.ref_name }}","commit":"${{ github.sha }}"}}')
+            -d '{"event_type": "submodule-auto-update","client_payload":{"submodule":"${{ github.repository }}","branch":"${{ github.ref_name }}","commit":"${{ github.sha }}"}}')
           
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | head -n-1)
